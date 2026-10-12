@@ -4,7 +4,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get("/", (req, res) => {
-  res.send("hello in backend");
+  res.send("hello back");
 });
 
 // Start a server only when run locally (npm start); Vercel imports the exported app instead.
