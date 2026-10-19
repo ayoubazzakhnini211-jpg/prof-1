@@ -5,19 +5,21 @@ const mongoose = require("mongoose");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+// trim() : une valeur collée dans Vercel peut finir par un retour à la ligne invisible.
+const MONGODB_URL = (process.env.MONGODB_URL || "").trim();
 
 // Dernière erreur de connexion, affichée par /health.
 let dbError = null;
 
 async function connectDB() {
-  if (!process.env.MONGODB_URL) {
+  if (!MONGODB_URL) {
     dbError = "MONGODB_URL manquant";
     console.error("❌ MONGODB_URL manquant : ajoute-le dans back/.env (ou dans les variables d'environnement Vercel)");
     return;
   }
 
   try {
-    await mongoose.connect(process.env.MONGODB_URL, { serverSelectionTimeoutMS: 10000 });
+    await mongoose.connect(MONGODB_URL, { serverSelectionTimeoutMS: 10000 });
     dbError = null;
 
     console.log("✅ Connecté à MongoDB Atlas");
