@@ -6,23 +6,40 @@ const mongoose = require("mongoose");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Dernière erreur de connexion, affichée par /health.
+let dbError = null;
+
 async function connectDB() {
   if (!process.env.MONGODB_URL) {
+    dbError = "MONGODB_URL manquant";
     console.error("❌ MONGODB_URL manquant : ajoute-le dans back/.env (ou dans les variables d'environnement Vercel)");
     return;
   }
 
   try {
     await mongoose.connect(process.env.MONGODB_URL, { serverSelectionTimeoutMS: 10000 });
+    dbError = null;
 
     console.log("✅ Connecté à MongoDB Atlas");
   } catch (error) {
     // Ne pas tuer le process : sur Vercel ça ferait planter la fonction entière.
+    dbError = error.message;
     console.error("❌ Erreur de connexion MongoDB :", error.message);
   }
 }
 
-connectDB();
+const dbReady = connectDB();
+
+app.get("/health", async (req, res) => {
+  // Sur Vercel la requête peut arriver avant la fin de la connexion : on l'attend.
+  await dbReady;
+
+  const connected = mongoose.connection.readyState === 1;
+  res.status(connected ? 200 : 503).json({
+    mongodb: connected ? "connecté" : "déconnecté",
+    ...(connected ? {} : { erreur: dbError }),
+  });
+});
 
 app.get("/", (req, res) => {
   res.send(`<!DOCTYPE html>
