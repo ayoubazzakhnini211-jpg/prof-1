@@ -1,7 +1,28 @@
+require("dotenv").config();
+
 const express = require("express");
+const mongoose = require("mongoose");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+async function connectDB() {
+  if (!process.env.MONGODB_URL) {
+    console.error("❌ MONGODB_URL manquant : ajoute-le dans back/.env (ou dans les variables d'environnement Vercel)");
+    return;
+  }
+
+  try {
+    await mongoose.connect(process.env.MONGODB_URL, { serverSelectionTimeoutMS: 10000 });
+
+    console.log("✅ Connecté à MongoDB Atlas");
+  } catch (error) {
+    // Ne pas tuer le process : sur Vercel ça ferait planter la fonction entière.
+    console.error("❌ Erreur de connexion MongoDB :", error.message);
+  }
+}
+
+connectDB();
 
 app.get("/", (req, res) => {
   res.send(`<!DOCTYPE html>
